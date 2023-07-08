@@ -68,16 +68,20 @@ app.get("/", function (req, res) {
 });
 
 app.post("/", function (req, res) {
-  const item = req.body.userIn;
+  const itemName = req.body.userIn;
 
-  if (req.body.list === "Work List") {
-    workItems.push(item);
-    res.redirect("/work");
 
-  } else {
-    items.push(item);
+  const item = new Item({
+    name: itemName
+  });
+  item.save()
+    .then(() => {
+        console.log( itemName+" inserted..");
+    })
+    .catch((err) => {
+        console.log(err);
+    });
     res.redirect("/");
-  }
 });
 
 // work route
