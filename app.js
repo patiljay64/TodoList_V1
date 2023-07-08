@@ -1,22 +1,61 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const date = require(__dirname+ "/date.js");
 const app = express();
-
-// array of the items (Tasks of the TodoList)
-const items = ["Buy food", "Cook Food", "Eat Food"];
-const workItems = [];
 
 app.use(express.static("public")); // render the static pages like css
 app.use(bodyParser.urlencoded({ extended: true })); // getting info of users from FN
 app.set("view engine", "ejs"); // EJS requires 
 
+// array of the items (Tasks of the TodoList)
+// const items = ["Buy food", "Cook Food", "Eat Food"];
+// const workItems = [];
+
+mongoose.connection
+    .once("open", () => console.log("Connected with a database"))
+    .on("error", error => {
+        console.log("Your Error", error);
+    });
+// DB connection
+mongoose.connect("mongodb://127.0.0.1:27017/todolistDB");
+// DB Schema
+
+const itemsSchema = mongoose.Schema({
+  name: String
+});
+// collection
+const Item = mongoose.model("Item", itemsSchema);
+
+const item1 = new Item({
+  name: "Welcome to the ToDoList app"
+});
+
+const item2 = new Item({
+  name: "Hit the + button to add new task"
+});
+
+const item3 = new Item({
+  name: "<-- Hit this Button to Delete your task"
+});
+
+const defultTasks = [item1, item2, item3]
+
+// Item.insertMany(defultTasks)
+//   .then(() => {
+//     console.log("default data inserted");
+//   })
+//   .catch((err) => {
+//     console.log(err);
+//   })
+
 
 // Home route
 app.get("/", function (req, res) {
 
-  const day = date.getDate(); //today's date
-  res.render("list", { ListTitle: day, newListItems: items }); //passing data And render EJS 
+
+
+
+  res.render("list", { ListTitle: "Today", newListItems: items }); //passing data And render EJS 
 });
 
 app.post("/", function (req, res) {
