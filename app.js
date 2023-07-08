@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const e = require("express");
 const app = express();
 
 app.use(express.static("public")); // render the static pages like css
@@ -12,10 +13,10 @@ app.set("view engine", "ejs"); // EJS requires
 // const workItems = [];
 
 mongoose.connection
-    .once("open", () => console.log("Connected with a database"))
-    .on("error", error => {
-        console.log("Your Error", error);
-    });
+  .once("open", () => console.log("Connected with a database"))
+  .on("error", error => {
+    console.log("Your Error", error);
+  });
 // DB connection
 mongoose.connect("mongodb://127.0.0.1:27017/todolistDB");
 // DB Schema
@@ -38,24 +39,32 @@ const item3 = new Item({
   name: "<-- Hit this Button to Delete your task"
 });
 
-const defultTasks = [item1, item2, item3]
+const defultTasks = [item1, item2, item3];
 
-// Item.insertMany(defultTasks)
-//   .then(() => {
-//     console.log("default data inserted");
-//   })
-//   .catch((err) => {
-//     console.log(err);
-//   })
+
 
 
 // Home route
 app.get("/", function (req, res) {
 
+  Item.find()
+    .then((foundItems) => {
+      if (foundItems.length === 0) {
+        Item.insertMany(defultTasks)
+          .then(() => {
+            console.log("default data inserted");
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+          res.redirect("/");
+      } else {
+        res.render("list", { ListTitle: "Today", newListItems: foundItems }); //passing data And render EJS 
+      }
+    })
 
 
 
-  res.render("list", { ListTitle: "Today", newListItems: items }); //passing data And render EJS 
 });
 
 app.post("/", function (req, res) {
