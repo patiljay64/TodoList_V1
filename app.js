@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const _ = require("lodash");
 const app = express();
 
 app.use(express.static("public")); // render the static pages like css
@@ -66,27 +67,48 @@ app.get("/", function (req, res) {
 
 app.post("/", function (req, res) {
   const itemName = req.body.userIn;
+  const listName = req.body.list;
 
   const item = new Item({
     name: itemName
   });
-  item.save()
-    .then(() => {
-      console.log(itemName + " inserted..");
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-  res.redirect("/");
+
+  if (listName === "Today") {
+    item.save()
+      .then(() => {
+        console.log(itemName + " inserted in the list " + listName);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    res.redirect("/");
+  } else {
+    List.findOne({ name: listName })
+      .then((foundlist) => {
+        foundlist.items.push(item);
+        foundlist.save()
+          .then(() => {
+            console.log(itemName + " inserted in the list " + listName);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+        res.redirect("/" + listName);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+  }
+
 });
 
 // custom list of users
 app.get("/:listName", function (req, res) {
-  const customListName = (req.params.listName);
+  const customListName = _.capitalize(req.params.listName);
   // check if the list is allready avalible
 
   List.findOne({ name: customListName })
-  // cheating a new list if not present 
+    // cheating a new list if not present 
     .then((foundlist) => {
       if (!foundlist) {
         const list = new List({
@@ -95,7 +117,7 @@ app.get("/:listName", function (req, res) {
         });
 
         // saving to the DB
-        list.save(); 
+        list.save();
         console.log("saved new List");
         res.redirect("/" + customListName);
       } else {
@@ -113,18 +135,28 @@ app.get("/:listName", function (req, res) {
 // delating the item from the Today list
 app.post("/delete", function (req, res) {
   const checkedItem = req.body.checkbox;
+  const listName = req.body.listName;
 
-  Item.findByIdAndRemove({ _id: checkedItem })
-    .then(() => {
-      console.log(checkedItem + " deleted");
-      res.redirect("/")
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  if (listName === "Today") {
+    Item.findByIdAndRemove({ _id: checkedItem })
+      .then(() => {
+        console.log(checkedItem + " deleted");
+        res.redirect("/")
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  } else {
+    List.findOneAndUpdate({ name: listName }, { $pull: { items: { _id: checkedItem } } })
+      .then((foundlist) => {
+        res.redirect("/" + listName);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+
+  };
 });
-
-
 
 //listing to the port
 app.listen(3000, function () {

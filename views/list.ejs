@@ -13,9 +13,10 @@
                        <input type="checkbox" name="checkbox" value="<%= item.id %>" onchange="this.form.submit()">
                        <p><%=  item.name %> </p>
                    </div>
-            <%   }); %>
+                   <%   }); %>
+                   <input type="hidden" name="listName" value="<%= ListTitle %>">
+                </form>
 
-          </form>
 
            <form class="item" action="/" method="post" >
                <input type="text" name="userIn" placeholder="New Task" autocomplete="off" required>
