@@ -20,8 +20,15 @@ mongoose.connect("mongodb://127.0.0.1:27017/todolistDB");
 const itemsSchema = mongoose.Schema({
   name: String
 });
+
+const listSchema = {
+  name: String,
+  items: [itemsSchema]
+}
+
 // collection
 const Item = mongoose.model("Item", itemsSchema);
+const List = mongoose.model("List", listSchema);
 
 const item1 = new Item({
   name: "Welcome to the ToDoList app"
@@ -37,9 +44,6 @@ const item3 = new Item({
 
 const defultTasks = [item1, item2, item3];
 
-
-
-
 // Home route
 app.get("/", function (req, res) {
 
@@ -53,7 +57,7 @@ app.get("/", function (req, res) {
           .catch((err) => {
             console.log(err);
           });
-          res.redirect("/");
+        res.redirect("/");
       } else {
         res.render("list", { ListTitle: "Today", newListItems: foundItems }); //passing data And render EJS 
       }
@@ -68,31 +72,58 @@ app.post("/", function (req, res) {
   });
   item.save()
     .then(() => {
-        console.log( itemName+" inserted..");
+      console.log(itemName + " inserted..");
     })
     .catch((err) => {
-        console.log(err);
+      console.log(err);
     });
-    res.redirect("/");
+  res.redirect("/");
 });
 
-app.post("/delete", function(req,res){
+// custom list of users
+app.get("/:listName", function (req, res) {
+  const customListName = (req.params.listName);
+  // check if the list is allready avalible
+
+  List.findOne({ name: customListName })
+  // cheating a new list if not present 
+    .then((foundlist) => {
+      if (!foundlist) {
+        const list = new List({
+          name: customListName,
+          items: defultTasks
+        });
+
+        // saving to the DB
+        list.save(); 
+        console.log("saved new List");
+        res.redirect("/" + customListName);
+      } else {
+        // rendering the already created list 
+        res.render("list", { ListTitle: foundlist.name, newListItems: foundlist.items });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+
+
+});
+
+// delating the item from the Today list
+app.post("/delete", function (req, res) {
   const checkedItem = req.body.checkbox;
 
-  Item.findByIdAndRemove({_id: checkedItem})
-    .then(()=>{
+  Item.findByIdAndRemove({ _id: checkedItem })
+    .then(() => {
       console.log(checkedItem + " deleted");
       res.redirect("/")
     })
-    .catch((err)=>{
+    .catch((err) => {
       console.log(err);
     });
 });
 
-// work route
-app.get("/work", function (req, res) {
-  res.render("list", { ListTitle: "Work List", newListItems: workItems });
-});
 
 
 //listing to the port
