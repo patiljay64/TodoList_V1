@@ -1,16 +1,12 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const e = require("express");
 const app = express();
 
 app.use(express.static("public")); // render the static pages like css
 app.use(bodyParser.urlencoded({ extended: true })); // getting info of users from FN
 app.set("view engine", "ejs"); // EJS requires 
 
-// array of the items (Tasks of the TodoList)
-// const items = ["Buy food", "Cook Food", "Eat Food"];
-// const workItems = [];
 
 mongoose.connection
   .once("open", () => console.log("Connected with a database"))
@@ -61,15 +57,11 @@ app.get("/", function (req, res) {
       } else {
         res.render("list", { ListTitle: "Today", newListItems: foundItems }); //passing data And render EJS 
       }
-    })
-
-
-
+    });
 });
 
 app.post("/", function (req, res) {
   const itemName = req.body.userIn;
-
 
   const item = new Item({
     name: itemName
@@ -82,6 +74,19 @@ app.post("/", function (req, res) {
         console.log(err);
     });
     res.redirect("/");
+});
+
+app.post("/delete", function(req,res){
+  const checkedItem = req.body.checkbox;
+
+  Item.findByIdAndRemove({_id: checkedItem})
+    .then(()=>{
+      console.log(checkedItem + " deleted");
+      res.redirect("/")
+    })
+    .catch((err)=>{
+      console.log(err);
+    });
 });
 
 // work route
